@@ -1,7 +1,7 @@
 import random
-from math import sqrt
 from svgwrite import Drawing
 from svgwrite.container import Group
+import os
 
 
 class SudokuGenerator:
@@ -63,6 +63,7 @@ class SudokuGenerator:
         self.remove_numbers()
         return self.grid
 
+
 class SolverSudoku:
     def solve(self, grid, row, col, num):
         for x in range(9):
@@ -101,9 +102,128 @@ class SolverSudoku:
         return False
 
 
-def create_puzzle_svg(filename="Puzzle", grid=[]):
+class EnhancedSudokuGenerator(SudokuGenerator):
+    def __init__(self, difficulty, puzzle_number, n_hints, n_placeholders=0, global_number=1):
+        super().__init__(n_hints)
+        self.difficulty = difficulty
+        self.puzzle_number = puzzle_number
+        self.n_placeholders = n_placeholders
+        self.puzzle_folder = "puzzles"
+        self.global_number = global_number
+        self.coordinates_file = f"{self.puzzle_folder}/{self.global_number}. {
+            self.difficulty}{self.puzzle_number}_coordinates.txt"
+
+    def update_coordinates_file(self, solution_grid):
+        """Create coordinates file for the current puzzle."""
+        os.makedirs(self.puzzle_folder, exist_ok=True)
+
+        coordinates_dict = {}
+        for num in range(1, 10):
+            coordinates = []
+            for i in range(9):
+                for j in range(9):
+                    if solution_grid[i][j] == num:
+                        coordinates.append(f"R{i+1}C{j+1}")
+            coordinates_dict[num] = coordinates
+
+        with open(self.coordinates_file, 'w') as f:
+            for num, coords in coordinates_dict.items():
+                random.shuffle(coords)  # Randomize the order
+                f.write(f"{num}: {', '.join(coords)}\n")
+
+    def generate_linked_puzzle(self):
+        """Generate a puzzle with placeholders if needed."""
+        self.fill_grid()
+        solution_grid = [row[:] for row in self.grid]
+
+        # Save solution with numbered prefix
+        solution_filename = f"{
+            self.puzzle_folder}/{self.global_number}. {self.difficulty}{self.puzzle_number}S"
+        createPuzzleSvg(solution_filename, solution_grid)
+
+        self.update_coordinates_file(solution_grid)
+        self.remove_numbers()
+        puzzle_grid = [row[:] for row in self.grid]
+
+        if self.n_placeholders > 0 and self.puzzle_number > 1:
+            prev_coord_file = f"{self.puzzle_folder}/{self.global_number -
+                                                      1}. {self.difficulty}{self.puzzle_number-1}_coordinates.txt"
+
+            if os.path.exists(prev_coord_file):
+                placeholders = {}
+                available_numbers = []
+                used_values = set()  # Track used values to ensure uniqueness
+
+                # Get available numbers from the puzzle
+                for i in range(9):
+                    for j in range(9):
+                        if puzzle_grid[i][j] != 0:
+                            available_numbers.append((puzzle_grid[i][j], i, j))
+
+                # Shuffle available numbers
+                random.shuffle(available_numbers)
+
+                # Read from previous puzzle's coordinates
+                coord_mapping = {}
+                with open(prev_coord_file, 'r') as f:
+                    for line in f:
+                        if ': ' in line:
+                            num, coords = line.strip().split(': ')
+                            coord_mapping[int(num)] = coords.split(', ')
+
+                # Create placeholders ensuring unique values
+                placeholder_idx = 0
+                for num, i, j in available_numbers:
+                    if placeholder_idx >= self.n_placeholders:
+                        break
+
+                    if num not in used_values and num in coord_mapping and coord_mapping[num]:
+                        placeholder = chr(97 + placeholder_idx)
+                        coord = random.choice(coord_mapping[num])
+                        placeholders[placeholder] = f"{coord} [={num}]"
+                        used_values.add(num)
+
+                        # Replace all occurrences of this number
+                        for x in range(9):
+                            for y in range(9):
+                                if puzzle_grid[x][y] == num:
+                                    puzzle_grid[x][y] = placeholder
+
+                        placeholder_idx += 1
+
+                # Save placeholder information
+                with open(f"{self.puzzle_folder}/{self.global_number}. {self.difficulty}{self.puzzle_number}_placeholders.txt", 'w') as f:
+                    for placeholder, coord in placeholders.items():
+                        f.write(f"{placeholder} = {coord}\n")
+
+        # Save puzzle with numbered prefix
+        puzzle_filename = f"{
+            self.puzzle_folder}/{self.global_number}. {self.difficulty}{self.puzzle_number}"
+        createPuzzleSvg(puzzle_filename, puzzle_grid)
+
+        return puzzle_grid, solution_grid
+
+
+def create_puzzle_set(difficulty_level, num_puzzles, num_hints, num_placeholders=0, start_number=1, global_start=1):
+    """Create a set of puzzles for a specific difficulty level."""
+    os.makedirs("puzzles", exist_ok=True)
+
+    for i in range(num_puzzles):
+        puzzle_number = start_number + i
+        global_number = global_start + i
+        generator = EnhancedSudokuGenerator(
+            difficulty=difficulty_level,
+            puzzle_number=puzzle_number,
+            n_hints=num_hints,
+            n_placeholders=num_placeholders,
+            global_number=global_number
+        )
+        puzzle_grid, solution_grid = generator.generate_linked_puzzle()
+
+
+def createPuzzleSvg(filename="Puzzle", grid=[]):
     filename = filename if filename.endswith(".svg") else filename + ".svg"
-    
+
     grid_size = len(grid)
     cell_size = 40
     grid_font_size = 20
@@ -134,10 +254,12 @@ def create_puzzle_svg(filename="Puzzle", grid=[]):
         if i % 3 == 0:
             # Horizontal line
             y = i * cell_size
-            dwg.add(dwg.line(start=(0, y), end=(grid_width, y), stroke='black', stroke_width=3))
+            dwg.add(dwg.line(start=(0, y), end=(grid_width, y),
+                    stroke='black', stroke_width=3))
             # Vertical line
             x = i * cell_size
-            dwg.add(dwg.line(start=(x, 0), end=(x, grid_height), stroke='black', stroke_width=3))
+            dwg.add(dwg.line(start=(x, 0), end=(x, grid_height),
+                    stroke='black', stroke_width=3))
 
     dwg.add(grid_group)
 
@@ -146,6 +268,7 @@ def create_puzzle_svg(filename="Puzzle", grid=[]):
         grid_width, grid_height), fill='none', stroke='red', stroke_width=grid_outline_width))
 
     dwg.save()
+
 
 def displayGrid(grid):
     for i in range(9):
@@ -163,12 +286,11 @@ if __name__ == "__main__":
 
     print('\n', '*'*5, 'PUZZLE GRID', '*'*5)
     displayGrid(grid)
-    create_puzzle_svg("Puzzle", grid)
+    createPuzzleSvg("Puzzle", grid)
 
     if (solver.Suduko(grid, 0, 0)):
         print('\n', '*'*5, 'SOLUTION', '*'*5)
         displayGrid(grid)
-        create_puzzle_svg("Solution", grid)
+        createPuzzleSvg("Solution", grid)
     else:
         print("No Solution exist:(")
-

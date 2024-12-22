@@ -4,5 +4,4 @@
 *.pyc
 test*
 _*
-
-solver.py
+puzzles*
