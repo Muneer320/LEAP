@@ -101,48 +101,51 @@ class SolverSudoku:
         return False
 
 
-def create_puzzle_svg(filename="test_puzzle.svg", grid=[], page_width=2480, page_height=3508, margin=100, grid_outline_width=5, grid_font_size=40):
-    # Page size is A4 with 300 DPI (2480x3508 pixels)
+def create_puzzle_svg(filename="Puzzle", grid=[]):
+    filename = filename if filename.endswith(".svg") else filename + ".svg"
     
-    filename = filename if ".svg" in filename else filename + ".svg"
-    dwg = Drawing(filename, size=(page_width, page_height))
     grid_size = len(grid)
-    cell_size = min((page_width - 2 * margin) // grid_size,
-                    (page_height // 2) // grid_size)
+    cell_size = 40
+    grid_font_size = 20
+    grid_outline_width = 5
     grid_width = grid_size * cell_size
     grid_height = grid_size * cell_size
 
-    grid_start_x = (page_width - grid_width) // 2
-    grid_start_y = (page_height - grid_height) // 2
-
+    dwg = Drawing(filename, size=(grid_width, grid_height))
     grid_group = Group()
 
+    # Draw cells and text
     for row in range(grid_size):
         for col in range(grid_size):
-            cell_x = grid_start_x + col * cell_size
-            cell_y = grid_start_y + row * cell_size
+            cell_x = col * cell_size
+            cell_y = row * cell_size
 
             char_x = cell_x + cell_size // 2
             char_y = cell_y + cell_size // 2
-            value = str(grid[row][col]
-                        ) if grid[row][col] != 0 else ""
+            value = str(grid[row][col]) if grid[row][col] != 0 else ""
             grid_group.add(dwg.text(value, insert=(char_x, char_y), text_anchor="middle",
                                     alignment_baseline="central", font_size=grid_font_size, fill='black'))
 
+            grid_group.add(dwg.rect(insert=(cell_x, cell_y), size=(
+                cell_size, cell_size), fill='none', stroke='black', stroke_width=1))
+
+    # Add thicker lines for 3x3 subgrids
+    for i in range(1, grid_size):
+        if i % 3 == 0:
+            # Horizontal line
+            y = i * cell_size
+            dwg.add(dwg.line(start=(0, y), end=(grid_width, y), stroke='black', stroke_width=3))
+            # Vertical line
+            x = i * cell_size
+            dwg.add(dwg.line(start=(x, 0), end=(x, grid_height), stroke='black', stroke_width=3))
+
     dwg.add(grid_group)
 
-    for row in range(grid_size):
-        for col in range(grid_size):
-            cell_x = grid_start_x + col * cell_size
-            cell_y = grid_start_y + row * cell_size
-            grid_group.add(dwg.rect(insert=(cell_x, cell_y), size=(
-                cell_size, cell_size), fill='none', stroke='black'))
-
-    dwg.add(dwg.rect(insert=(grid_start_x, grid_start_y), size=(
-            grid_width, grid_height), fill='none', stroke='red', stroke_width=grid_outline_width))
+    # Add outer grid border
+    dwg.add(dwg.rect(insert=(0, 0), size=(
+        grid_width, grid_height), fill='none', stroke='red', stroke_width=grid_outline_width))
 
     dwg.save()
-
 
 def displayGrid(grid):
     for i in range(9):
