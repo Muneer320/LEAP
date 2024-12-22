@@ -1,5 +1,6 @@
 import argparse
-from generatePuzzle import create_puzzle_set
+from generatePuzzle import createPuzzleSet
+from createBook import createSudokuBook
 import os
 
 
@@ -20,8 +21,8 @@ def main():
                         default=40, help="Number of hints for easy mode puzzles")
     parser.add_argument("-mh", "--medium_hints", type=int,
                         default=36, help="Number of hints for medium mode puzzles")
-    parser.add_argument("-hh", "--hard_hints", type=int,
-                        default=27, help="Number of hints for hard mode puzzles")
+    parser.add_argument("-ah", "--advanced_hints", type=int,
+                        default=27, help="Number of hints for advanced mode puzzles")
     parser.add_argument("-gh", "--grandmaster_hints", type=int,
                         default=18, help="Number of hints for grandmaster mode puzzles")
 
@@ -39,23 +40,38 @@ def main():
     global_counter = 1
 
     if args.easy > 0:
-        create_puzzle_set('E', args.easy, args.easy_hints,
+        createPuzzleSet('E', args.easy, args.easy_hints,
                           easy_placeholders, start_number=1, global_start=global_counter)
         global_counter += args.easy
 
     if args.medium > 0:
-        create_puzzle_set('M', args.medium, args.medium_hints,
+        createPuzzleSet('M', args.medium, args.medium_hints,
                           medium_placeholders, start_number=1, global_start=global_counter)
         global_counter += args.medium
 
     if args.advanced > 0:
-        create_puzzle_set('A', args.advanced, args.hard_hints,
+        createPuzzleSet('A', args.advanced, args.advanced_hints,
                           advanced_placeholders, start_number=1, global_start=global_counter)
         global_counter += args.advanced
 
     if args.grandmaster > 0:
-        create_puzzle_set('G', args.grandmaster, args.grandmaster_hints,
+        createPuzzleSet('G', args.grandmaster, args.grandmaster_hints,
                           grandmaster_placeholders, start_number=1, global_start=global_counter)
+
+
+    # Make the book
+    backgrounds = {
+        'cover': "Assets/Background.png",
+        'instructions': "Assets/Background.png",
+        'puzzle': "Assets/pageBackground.png",
+        'solutions': "Assets/pageBackground.png"
+    }
+    createSudokuBook("puzzles", "Linked_Sudoku_Puzzles.pdf", backgrounds)
+
+
+
+
+
 
     if args.delete:
         # Implementation for cleanup...

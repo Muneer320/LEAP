@@ -204,7 +204,7 @@ class EnhancedSudokuGenerator(SudokuGenerator):
         return puzzle_grid, solution_grid
 
 
-def create_puzzle_set(difficulty_level, num_puzzles, num_hints, num_placeholders=0, start_number=1, global_start=1):
+def createPuzzleSet(difficulty_level, num_puzzles, num_hints, num_placeholders=0, start_number=1, global_start=1):
     """Create a set of puzzles for a specific difficulty level."""
     os.makedirs("puzzles", exist_ok=True)
 

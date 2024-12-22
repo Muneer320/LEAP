@@ -250,7 +250,7 @@ class SudokuBookCreator:
         c.save()
 
 
-def create_sudoku_book(puzzles_folder, output_filename="Sudoku_Book.pdf", backgrounds=None):
+def createSudokuBook(puzzles_folder, output_filename="Sudoku_Book.pdf", backgrounds=None):
     """
     Main function to create the Sudoku book.
     backgrounds: dict with keys 'cover', 'instructions', 'puzzle', 'solutions'
@@ -267,4 +267,4 @@ if __name__ == "__main__":
         'puzzle': "Assets/pageBackground.png",
         'solutions': "Assets/pageBackground.png"
     }
-    create_sudoku_book("puzzles", "Linked_Sudoku_Puzzles.pdf", backgrounds)
+    createSudokuBook("puzzles", "Linked_Sudoku_Puzzles.pdf", backgrounds)
