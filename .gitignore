@@ -1,0 +1,7 @@
+*.pptx
+*.cpython
+*.pyc
+test*
+_*
+
+solver.py
