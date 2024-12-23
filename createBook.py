@@ -13,8 +13,8 @@ import re
 
 
 class SudokuBookCreator:
-    def __init__(self, output_filename="Sudoku_Book.pdf"):
-        self.output_filename = output_filename
+    def __init__(self, bookname="Sudoku_Book.pdf"):
+        self.bookname = bookname
         self.width, self.height = A4
         self.margin = 50
         # Reduced puzzle size to 60% of previous size
@@ -69,7 +69,7 @@ class SudokuBookCreator:
             c.drawImage(cover_background, 0, 0, self.width, self.height)
 
         c.setFont("Helvetica-Bold", 36)
-        title = "Linked Sudoku Puzzles"
+        title = self.bookname.replace(".pdf", "").replace("_", " ")
         c.drawCentredString(self.width/2, self.height - 200, title)
 
         c.setFont("Helvetica", 18)
@@ -238,6 +238,93 @@ class SudokuBookCreator:
             lines.append(' '.join(current_line))
 
         return lines
+
+    def create_index_page(self, c, puzzles_folder, background=None):
+        """Create an index page showing puzzle counts and IDs for each mode."""
+        if background and os.path.exists(background):
+            c.drawImage(background, 0, 0, self.width, self.height)
+
+        # Get all puzzle files and organize by mode
+        puzzle_files = [f for f in os.listdir(puzzles_folder)
+                        if f.endswith('.svg') and not f.endswith('S.svg')]
+        puzzle_files.sort(key=lambda x: int(re.search(r'(\d+)', x).group()))
+
+        # Group puzzles by mode
+        mode_groups = {
+            'E': {'name': 'Easy Mode', 'puzzles': []},
+            'M': {'name': 'Medium Mode', 'puzzles': []},
+            'A': {'name': 'Advanced Mode', 'puzzles': []},
+            'G': {'name': 'Grandmaster Mode', 'puzzles': []}
+        }
+
+        for puzzle_file in puzzle_files:
+            # Get E/M/A/G from filename
+            mode = puzzle_file[puzzle_file.find('.')+2]
+            if mode in mode_groups:
+                puzzle_id = re.search(r'[EMAG]\d+', puzzle_file).group()
+                mode_groups[mode]['puzzles'].append(puzzle_id)
+
+        # Title
+        c.setFont("Helvetica-Bold", 28)
+        c.drawCentredString(self.width/2, self.height - 80, "Index")
+
+        # Starting position for the first mode
+        y_position = self.height - 150
+        circle_radius = 8
+        circle_spacing = 25
+        left_margin = self.margin  # Reduced left margin for mode names
+
+        for mode, data in mode_groups.items():
+            if not data['puzzles']:
+                continue
+
+            # Draw mode name
+            # Changed to Times-Bold for better underlining
+            c.setFont("Times-Bold", 16)
+            mode_name = data['name']
+            mode_width = c.stringWidth(mode_name, "Times-Bold", 16)
+
+            # Draw the mode name
+            c.drawString(left_margin, y_position, mode_name)
+
+            # Draw underline
+            underline_y = y_position - 2  # Position slightly below text
+            c.line(left_margin, underline_y,
+                   left_margin + mode_width, underline_y)
+
+            y_position -= 30
+
+            # Calculate positions for circles and numbers
+            circles_per_row = min(10, len(data['puzzles']))
+            total_width = (circles_per_row - 1) * circle_spacing
+
+            # Center the circles horizontally
+            x_start = (self.width - total_width) / 2
+
+            # Draw circles and numbers for this mode
+            current_x = x_start
+            count = 0
+
+            for puzzle_id in data['puzzles']:
+                # Draw hollow circle
+                c.circle(current_x, y_position + circle_radius, circle_radius)
+
+                # Draw puzzle ID below circle
+                c.setFont("Helvetica", 8)
+                c.drawCentredString(current_x, y_position - 10, puzzle_id)
+
+                current_x += circle_spacing
+                count += 1
+
+                # Start new row if needed
+                if count % circles_per_row == 0 and count < len(data['puzzles']):
+                    y_position -= 35
+                    current_x = x_start
+
+            # Space between modes
+            y_position -= 60
+
+        c.showPage()
 
     def create_mode_transition_page(self, c, mode, background=None):
         """Create a transition page for a new mode."""
@@ -469,14 +556,20 @@ class SudokuBookCreator:
                 c.showPage()
 
     def create_book(self, puzzles_folder, backgrounds=None):
-        """Create the complete puzzle book with transition pages for modes."""
+        """Create the complete puzzle book with index page."""
         if backgrounds is None:
             backgrounds = {}
 
-        c = canvas.Canvas(self.output_filename, pagesize=A4)
+        c = canvas.Canvas(self.bookname, pagesize=A4)
 
-        # Create cover and instructions with their specific backgrounds
+        # Create cover page
         self.create_cover_page(c, backgrounds.get('cover'))
+
+        # Create index page
+        self.create_index_page(
+            c, puzzles_folder, backgrounds.get('instructions'))
+
+        # Create instructions page
         self.create_instructions_page(c, backgrounds.get('instructions'))
 
         # Sort puzzle files numerically and group by mode
@@ -519,13 +612,13 @@ class SudokuBookCreator:
         c.save()
 
 
-def createSudokuBook(puzzles_folder, output_filename="Sudoku_Book.pdf", backgrounds=None):
+def createSudokuBook(puzzles_folder, bookname="Sudoku_Book.pdf", backgrounds=None):
     """
     Main function to create the Sudoku book.
     backgrounds: dict with keys 'cover', 'instructions', 'puzzle', 'solutions'
     containing paths to background images for each section
     """
-    creator = SudokuBookCreator(output_filename)
+    creator = SudokuBookCreator(bookname)
     creator.create_book(puzzles_folder, backgrounds)
 
 
