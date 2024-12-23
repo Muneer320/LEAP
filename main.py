@@ -85,10 +85,11 @@ def main():
     print("Creating book...\n")
     # Make the book
     backgrounds = {
-        'cover': "Assets/Background.png",
-        'instructions': "Assets/Background.png",
-        'puzzle': "Assets/pageBackground.png",
-        'solutions': "Assets/pageBackground.png"
+        'cover': "Assets/Background1.png",
+        'instructions': "Assets/Background1.png",
+        'transition': "Assets/Background2.png",
+        'puzzle': "Assets/PageBackground.jpg",
+        'solutions': "Assets/PageBackground.jpg"
     }
     createSudokuBook("puzzles", args.name, backgrounds, args.cover_text)
 

@@ -8,13 +8,14 @@ import re
 
 
 class SudokuBookCreator:
-    def __init__(self, bookname="Sudoku_Book.pdf", cover_text=False):
+    def __init__(self, bookname="Sudoku_Book.pdf", cover_text=False, backgrounds={}):
         self.bookname = bookname
         self.width, self.height = A4
         self.margin = 50
         self.puzzle_size = min((self.width - 2 * self.margin),
                                (self.height - 4 * self.margin)) * 0.6
         self.cover_text = cover_text
+        self.backgrounds = backgrounds if backgrounds is not None else {}
 
     def format_placeholder(self, line):
         """Format placeholder text from R1C2 format to readable format."""
@@ -58,8 +59,9 @@ class SudokuBookCreator:
 
         return []
 
-    def create_cover_page(self, c, cover_background=None):
+    def create_cover_page(self, c):
         """Create an attractive cover page for the puzzle book."""
+        cover_background = self.backgrounds.get('cover')
         if cover_background and os.path.exists(cover_background):
             c.drawImage(cover_background, 0, 0, self.width, self.height)
 
@@ -76,8 +78,9 @@ class SudokuBookCreator:
 
         c.showPage()
 
-    def create_instructions_page(self, c, instructions_background=None):
+    def create_instructions_page(self, c):
         """Create a comprehensive instructions page with examples."""
+        instructions_background = self.backgrounds.get('instructions')
         if instructions_background and os.path.exists(instructions_background):
             c.drawImage(instructions_background, 0, 0, self.width, self.height)
 
@@ -237,10 +240,11 @@ class SudokuBookCreator:
 
         return lines
 
-    def create_index_page(self, c, puzzles_folder, background=None):
+    def create_index_page(self, c, puzzles_folder):
         """Create an index page showing puzzle counts and IDs for each mode."""
-        if background and os.path.exists(background):
-            c.drawImage(background, 0, 0, self.width, self.height)
+        index_background = self.backgrounds.get('index')
+        if index_background and os.path.exists(index_background):
+            c.drawImage(index_background, 0, 0, self.width, self.height)
 
         # Get all puzzle files and organize by mode
         puzzle_files = [f for f in os.listdir(puzzles_folder)
@@ -324,10 +328,11 @@ class SudokuBookCreator:
 
         c.showPage()
 
-    def create_mode_transition_page(self, c, mode, background=None):
+    def create_mode_transition_page(self, c, mode):
         """Create a transition page for a new mode."""
-        if background and os.path.exists(background):
-            c.drawImage(background, 0, 0, self.width, self.height)
+        transition_background = self.backgrounds.get('transition')
+        if transition_background and os.path.exists(transition_background):
+            c.drawImage(transition_background, 0, 0, self.width, self.height)
 
         # Mode titles with descriptions
         mode_info = {
@@ -364,8 +369,9 @@ class SudokuBookCreator:
 
         c.showPage()
 
-    def add_puzzle_page(self, c, svg_path, puzzle_number, puzzle_background=None):
+    def add_puzzle_page(self, c, svg_path, puzzle_number):
         """Add a puzzle page with proper formatting and metadata."""
+        puzzle_background = self.backgrounds.get('puzzle')
         if puzzle_background and os.path.exists(puzzle_background):
             c.drawImage(puzzle_background, 0, 0, self.width, self.height)
 
@@ -446,15 +452,19 @@ class SudokuBookCreator:
 
         c.showPage()
 
-    def add_solutions_section(self, c, puzzles_folder, solutions_background=None):
+    def add_solutions_section(self, c, puzzles_folder):
         """Add the solutions section with solutions arranged in a 3x3 grid, grouped by difficulty."""
         # Solutions cover page
-        if solutions_background and os.path.exists(solutions_background):
-            c.drawImage(solutions_background, 0, 0, self.width, self.height)
+        transitions_background = self.backgrounds.get('transition')
+        if transitions_background and os.path.exists(transitions_background):
+            c.drawImage(transitions_background, 0, 0, self.width, self.height)
 
         c.setFont("Helvetica-Bold", 36)
         c.drawCentredString(self.width/2, self.height/2, "SOLUTIONS")
         c.showPage()
+
+        solutions_background = self.backgrounds.get(
+            'solutions', self.backgrounds.get('puzzle'))
 
         # Get all puzzle files and sort them
         puzzle_files = [f for f in os.listdir(puzzles_folder)
@@ -553,22 +563,18 @@ class SudokuBookCreator:
 
                 c.showPage()
 
-    def create_book(self, puzzles_folder, backgrounds=None):
+    def create_book(self, puzzles_folder):
         """Create the complete puzzle book with index page."""
-        if backgrounds is None:
-            backgrounds = {}
-
         c = canvas.Canvas(self.bookname, pagesize=A4)
 
         # Create cover page
-        self.create_cover_page(c, backgrounds.get('cover'))
+        self.create_cover_page(c)
 
         # Create index page
-        self.create_index_page(
-            c, puzzles_folder, backgrounds.get('instructions'))
+        self.create_index_page(c, puzzles_folder)
 
         # Create instructions page
-        self.create_instructions_page(c, backgrounds.get('instructions'))
+        self.create_instructions_page(c)
 
         # Sort puzzle files numerically and group by mode
         puzzle_files = [f for f in os.listdir(puzzles_folder)
@@ -588,24 +594,13 @@ class SudokuBookCreator:
 
             # If mode changes or it's the first puzzle, add transition page
             if mode != current_mode:
-                self.create_mode_transition_page(
-                    c, mode, backgrounds.get('puzzle'))
+                self.create_mode_transition_page(c, mode)
                 current_mode = mode
 
-            self.add_puzzle_page(
-                c, puzzle_path, puzzle_number, backgrounds.get('puzzle'))
+            self.add_puzzle_page(c, puzzle_path, puzzle_number)
 
         # Add solutions section with its background
-        solutions_background = backgrounds.get('solutions')
-        if solutions_background and os.path.exists(solutions_background):
-            c.drawImage(solutions_background, 0, 0, self.width, self.height)
-
-        c.setFont("Helvetica-Bold", 36)
-        c.drawCentredString(self.width/2, self.height/2, "SOLUTIONS")
-        c.showPage()
-
-        self.add_solutions_section(
-            c, puzzles_folder, backgrounds.get('solutions'))
+        self.add_solutions_section(c, puzzles_folder)
 
         c.save()
 
@@ -617,14 +612,15 @@ def createSudokuBook(puzzles_folder, bookname="Sudoku_Book.pdf", backgrounds=Non
     containing paths to background images for each section
     """
     bookname = bookname.strip() if bookname.endswith(".pdf") else f"{bookname.strip()}.pdf"
-    creator = SudokuBookCreator(bookname, cover_text)
-    creator.create_book(puzzles_folder, backgrounds)
+    creator = SudokuBookCreator(bookname, cover_text, backgrounds=backgrounds)
+    creator.create_book(puzzles_folder)
 
 
 if __name__ == "__main__":
     backgrounds = {
         'cover': "Assets/Background.png",
         'instructions': "Assets/Background.png",
+        'transition': "Assets/pageBackground.png",
         'puzzle': "Assets/pageBackground.png",
         'solutions': "Assets/pageBackground.png"
     }

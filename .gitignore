@@ -1,5 +1,6 @@
 *.pptx
 *.svg
+*.pdf
 *.cpython
 *.pyc
 test*
