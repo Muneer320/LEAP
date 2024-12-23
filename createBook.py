@@ -79,33 +79,165 @@ class SudokuBookCreator:
         c.showPage()
 
     def create_instructions_page(self, c, instructions_background=None):
-        """Create an instructions page explaining linked puzzles."""
+        """Create a comprehensive instructions page with examples."""
         if instructions_background and os.path.exists(instructions_background):
             c.drawImage(instructions_background, 0, 0, self.width, self.height)
 
-        c.setFont("Helvetica-Bold", 24)
-        c.drawCentredString(self.width/2, self.height - 100, "How to Play")
+        # Title
+        c.setFont("Helvetica-Bold", 28)
+        c.drawCentredString(self.width/2, self.height - 80,
+                            "How to Play Linked Sudoku")
 
-        instructions = [
-            "1. Start with Puzzle 1 - a regular Sudoku puzzle.",
-            "2. Solve the puzzle completely.",
-            "3. Notice the letter placeholders (a, b, c, etc.) in the next puzzle.",
-            "4. Use your solution from the previous puzzle to find the values",
-            "   for these placeholders.",
-            "5. Continue solving puzzles to unlock more challenges!"
+        # Introduction
+        c.setFont("Helvetica", 12)
+        intro_text = (
+            "Welcome to Linked Sudoku! This unique puzzle book connects each puzzle to the next, "
+            "creating an engaging chain of challenges. Each solution becomes a key to unlock the next puzzle."
+        )
+        text_width = self.width - (2 * self.margin)
+        text_object = c.beginText(self.margin, self.height - 120)
+        text_object.setFont("Helvetica", 12)
+        wrapped_text = self._wrap_text(intro_text, "Helvetica", 12, text_width)
+        for line in wrapped_text:
+            text_object.textLine(line)
+        c.drawText(text_object)
+
+        # Basic Rules Section
+        y_position = self.height - 180
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(self.margin, y_position, "Basic Sudoku Rules:")
+
+        basic_rules = [
+            "• Fill in the 9×9 grid with numbers 1-9",
+            "• Each row must contain all numbers 1-9",
+            "• Each column must contain all numbers 1-9",
+            "• Each 3×3 box must contain all numbers 1-9"
         ]
 
-        c.setFont("Helvetica", 14)
-        y_position = self.height - 150
-        for line in instructions:
-            y_position -= 30
-            c.drawString(self.margin + 20, y_position, line)
+        c.setFont("Helvetica", 12)
+        for rule in basic_rules:
+            y_position -= 20
+            c.drawString(self.margin + 10, y_position, rule)
+
+        # Linked Puzzle System
+        y_position -= 40
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(self.margin, y_position, "How The Linked System Works:")
+
+        y_position -= 30
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(self.margin, y_position, "Step 1: Solve the First Puzzle")
+
+        y_position -= 20
+        c.setFont("Helvetica", 12)
+        step1_text = (
+            "Start with Puzzle E1 - a standard Sudoku puzzle with no special rules. "
+            "Solve it completely using regular Sudoku rules."
+        )
+        wrapped_text = self._wrap_text(step1_text, "Helvetica", 12, text_width)
+        for line in wrapped_text:
+            c.drawString(self.margin + 10, y_position, line)
+            y_position -= 15
+
+        y_position -= 15
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(self.margin, y_position, "Step 2: Use the Link Table")
+
+        y_position -= 20
+        c.setFont("Helvetica", 12)
+        step2_text = (
+            "Below each puzzle, you'll find a link table. It shows which numbers you need "
+            "to carry forward to the next puzzle. For example:"
+        )
+        wrapped_text = self._wrap_text(step2_text, "Helvetica", 12, text_width)
+        for line in wrapped_text:
+            c.drawString(self.margin + 10, y_position, line)
+            y_position -= 15
+
+        # Example Table
+        y_position -= 20
+        table_data = [
+            ["Letter", "Row", "Column", "Value"],
+            ["a", "2", "4", "__"],
+            ["b", "5", "7", "__"],
+            ["c", "8", "1", "__"]
+        ]
+
+        col_widths = [60, 60, 60, 60]
+        row_height = 20
+        x_start = self.margin + 50
+
+        # Draw table
+        c.setFont("Helvetica-Bold", 10)
+        for col, header in enumerate(table_data[0]):
+            c.drawString(x_start + sum(col_widths[:col]), y_position, header)
+
+        c.setFont("Helvetica", 10)
+        for row in range(1, len(table_data)):
+            y_position -= row_height
+            for col, value in enumerate(table_data[row]):
+                c.drawString(
+                    x_start + sum(col_widths[:col]), y_position, value)
+
+        y_position -= 40
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(self.margin, y_position,
+                     "Step 3: Fill in Starting Numbers")
+
+        y_position -= 20
+        c.setFont("Helvetica", 12)
+        step3_text = (
+            "Look at your solution for the previous puzzle. Find the numbers in the positions "
+            "specified by the link table. These numbers become your starting points in the "
+            "next puzzle, replacing the letters (a, b, c, etc.)."
+        )
+        wrapped_text = self._wrap_text(step3_text, "Helvetica", 12, text_width)
+        for line in wrapped_text:
+            c.drawString(self.margin + 10, y_position, line)
+            y_position -= 15
+
+        # Difficulty Levels
+        y_position -= 25
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(self.margin, y_position, "Difficulty Levels:")
+
+        difficulty_levels = [
+            "E: Easy Mode - Easy puzzles with more number hints and less placeholders (a, b, c, etc.)",
+            "M: Medium Mode - Balanced puzzles with less number hints and more placeholders",
+            "A: Advanced Mode - Complex patterns with fewer number hints and more placeholders",
+            "G: Grandmaster Mode - Expert-level challenges with minimal number hints and many placeholders"
+        ]
+
+        c.setFont("Helvetica", 12)
+        for level in difficulty_levels:
+            y_position -= 20
+            c.drawString(self.margin + 10, y_position, level)
 
         # Add page number
         c.setFont("Helvetica", 12)
         c.drawCentredString(self.width/2, self.margin, "Instructions")
 
         c.showPage()
+
+    def _wrap_text(self, text, font_name, font_size, max_width):
+        """Helper method to wrap text to fit within a specified width."""
+        words = text.split()
+        lines = []
+        current_line = []
+
+        for word in words:
+            current_line.append(word)
+            line_width = pdfmetrics.stringWidth(
+                ' '.join(current_line), font_name, font_size)
+            if line_width > max_width:
+                current_line.pop()
+                lines.append(' '.join(current_line))
+                current_line = [word]
+
+        if current_line:
+            lines.append(' '.join(current_line))
+
+        return lines
 
     def add_puzzle_page(self, c, svg_path, puzzle_number, puzzle_background=None):
         """Add a puzzle page with proper formatting and metadata."""
