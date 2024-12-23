@@ -7,6 +7,8 @@ import os
 def main():
     parser = argparse.ArgumentParser(
         description="Create a book of linked Sudoku puzzles.")
+    parser.add_argument("-n", "--name", type=str, default="LEAP",
+                        help="Name of the book")
     parser.add_argument("-e", "--easy", type=int, default=15,
                         help="Number of easy mode puzzles to generate")
     parser.add_argument("-m", "--medium", type=int, default=10,
@@ -25,8 +27,21 @@ def main():
                         default=27, help="Number of hints for advanced mode puzzles")
     parser.add_argument("-gh", "--grandmaster_hints", type=int,
                         default=18, help="Number of hints for grandmaster mode puzzles")
+    parser.add_argument("-ct", "--cover-text", action="store_true",
+                        default=False, help="Add text in the cover page")
 
     args = parser.parse_args()
+
+
+    # Check each mode has at least one puzzle
+    if any([args.easy < 1, args.medium < 1, args.advanced < 1, args.grandmaster < 1]):
+        print("Each mode must have at least one puzzle.")
+        return
+
+    # Check each mode has at least 18 hints [Minimum number of hints for a valid Sudoku puzzle]
+    if any([args.easy_hints < 18, args.medium_hints < 18, args.advanced_hints < 18, args.grandmaster_hints < 18]):
+        print("Each mode must have at least 18 hints.")
+        return
 
 
     print("Starting LEAP...\n\n")
@@ -75,7 +90,7 @@ def main():
         'puzzle': "Assets/pageBackground.png",
         'solutions': "Assets/pageBackground.png"
     }
-    createSudokuBook("puzzles", "Linked_Sudoku_Puzzles.pdf", backgrounds)
+    createSudokuBook("puzzles", args.name, backgrounds, args.cover_text)
 
     print("Book created successfully.\n")
 

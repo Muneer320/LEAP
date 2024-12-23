@@ -8,13 +8,13 @@ import re
 
 
 class SudokuBookCreator:
-    def __init__(self, bookname="Sudoku_Book.pdf"):
+    def __init__(self, bookname="Sudoku_Book.pdf", cover_text=False):
         self.bookname = bookname
         self.width, self.height = A4
         self.margin = 50
-        # Reduced puzzle size to 60% of previous size
         self.puzzle_size = min((self.width - 2 * self.margin),
                                (self.height - 4 * self.margin)) * 0.6
+        self.cover_text = cover_text
 
     def format_placeholder(self, line):
         """Format placeholder text from R1C2 format to readable format."""
@@ -63,13 +63,16 @@ class SudokuBookCreator:
         if cover_background and os.path.exists(cover_background):
             c.drawImage(cover_background, 0, 0, self.width, self.height)
 
-        c.setFont("Helvetica-Bold", 36)
-        title = self.bookname.replace(".pdf", "").replace("_", " ")
-        c.drawCentredString(self.width/2, self.height - 200, title)
+        if self.cover_text:
+            # Title
+            c.setFont("Helvetica-Bold", 36)
+            title = self.bookname.replace(".pdf", "").replace("_", " ")
+            c.drawCentredString(self.width/2, self.height - 200, title)
 
-        c.setFont("Helvetica", 18)
-        subtitle = "Each puzzle unlocks the next challenge"
-        c.drawCentredString(self.width/2, self.height - 250, subtitle)
+            # Subtitle
+            c.setFont("Helvetica", 18)
+            subtitle = "Each puzzle unlocks the next challenge"
+            c.drawCentredString(self.width/2, self.height - 250, subtitle)
 
         c.showPage()
 
@@ -607,13 +610,14 @@ class SudokuBookCreator:
         c.save()
 
 
-def createSudokuBook(puzzles_folder, bookname="Sudoku_Book.pdf", backgrounds=None):
+def createSudokuBook(puzzles_folder, bookname="Sudoku_Book.pdf", backgrounds=None, cover_text=False):
     """
     Main function to create the Sudoku book.
     backgrounds: dict with keys 'cover', 'instructions', 'puzzle', 'solutions'
     containing paths to background images for each section
     """
-    creator = SudokuBookCreator(bookname)
+    bookname = bookname.strip() if bookname.endswith(".pdf") else f"{bookname.strip()}.pdf"
+    creator = SudokuBookCreator(bookname, cover_text)
     creator.create_book(puzzles_folder, backgrounds)
 
 
