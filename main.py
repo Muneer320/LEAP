@@ -28,37 +28,46 @@ def main():
 
     args = parser.parse_args()
 
+
+    print("Starting LEAP...\n\n")
+
     # Placeholders Count
     easy_placeholders = 3
     medium_placeholders = 5
     advanced_placeholders = 7
     grandmaster_placeholders = 9
 
+
+    print("Generating puzzles...\n")
+
     # Create necessary directories
     os.makedirs("puzzles", exist_ok=True)
 
     global_counter = 1
 
+
     if args.easy > 0:
         createPuzzleSet('E', args.easy, args.easy_hints,
-                          easy_placeholders, start_number=1, global_start=global_counter)
+                        easy_placeholders, start_number=1, global_start=global_counter)
         global_counter += args.easy
 
     if args.medium > 0:
         createPuzzleSet('M', args.medium, args.medium_hints,
-                          medium_placeholders, start_number=1, global_start=global_counter)
+                        medium_placeholders, start_number=1, global_start=global_counter)
         global_counter += args.medium
 
     if args.advanced > 0:
         createPuzzleSet('A', args.advanced, args.advanced_hints,
-                          advanced_placeholders, start_number=1, global_start=global_counter)
+                        advanced_placeholders, start_number=1, global_start=global_counter)
         global_counter += args.advanced
 
     if args.grandmaster > 0:
         createPuzzleSet('G', args.grandmaster, args.grandmaster_hints,
-                          grandmaster_placeholders, start_number=1, global_start=global_counter)
+                        grandmaster_placeholders, start_number=1, global_start=global_counter)
 
+    print("All puzzles generated successfully.\n")
 
+    print("Creating book...\n")
     # Make the book
     backgrounds = {
         'cover': "Assets/Background.png",
@@ -68,14 +77,13 @@ def main():
     }
     createSudokuBook("puzzles", "Linked_Sudoku_Puzzles.pdf", backgrounds)
 
-
-
-
-
+    print("Book created successfully.\n")
 
     if args.delete:
-        # Implementation for cleanup...
-        pass
+        print("Deleting puzzles...\n")
+        import shutil
+        shutil.rmtree("puzzles")
+        print("Puzzles deleted successfully.\n")
 
 
 if __name__ == "__main__":
