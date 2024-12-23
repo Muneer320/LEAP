@@ -85,9 +85,9 @@ def main():
     print("Creating book...\n")
     # Make the book
     backgrounds = {
-        'cover': "Assets/Background1.png",
-        'instructions': "Assets/Background1.png",
-        'transition': "Assets/Background2.png",
+        'cover': "Assets/Cover.png",
+        'instructions': "Assets/Instructions.png",
+        'transition': "Assets/Transition.png",
         'puzzle': "Assets/PageBackground.jpg",
         'solutions': "Assets/PageBackground.jpg"
     }

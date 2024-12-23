@@ -62,8 +62,11 @@ class SudokuBookCreator:
     def create_cover_page(self, c):
         """Create an attractive cover page for the puzzle book."""
         cover_background = self.backgrounds.get('cover')
-        if cover_background and os.path.exists(cover_background):
-            c.drawImage(cover_background, 0, 0, self.width, self.height)
+        if not cover_background or not os.path.exists(cover_background):
+            print("Cover background image not found. Using Instructions Page background for cover page.")
+            cover_background = self.backgrounds.get('instructions')
+
+        c.drawImage(cover_background, 0, 0, self.width, self.height)
 
         if self.cover_text:
             # Title
@@ -611,7 +614,8 @@ def createSudokuBook(puzzles_folder, bookname="Sudoku_Book.pdf", backgrounds=Non
     backgrounds: dict with keys 'cover', 'instructions', 'puzzle', 'solutions'
     containing paths to background images for each section
     """
-    bookname = bookname.strip() if bookname.endswith(".pdf") else f"{bookname.strip()}.pdf"
+    bookname = bookname.strip() if bookname.endswith(
+        ".pdf") else f"{bookname.strip()}.pdf"
     creator = SudokuBookCreator(bookname, cover_text, backgrounds=backgrounds)
     creator.create_book(puzzles_folder)
 
