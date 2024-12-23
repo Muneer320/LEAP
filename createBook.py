@@ -239,6 +239,46 @@ class SudokuBookCreator:
 
         return lines
 
+    def create_mode_transition_page(self, c, mode, background=None):
+        """Create a transition page for a new mode."""
+        if background and os.path.exists(background):
+            c.drawImage(background, 0, 0, self.width, self.height)
+
+        # Mode titles with descriptions
+        mode_info = {
+            'E': {
+                'title': 'EASY MODE',
+                'subtitle': 'Perfect for beginners and warming up'
+            },
+            'M': {
+                'title': 'MEDIUM MODE',
+                'subtitle': 'Challenge yourself with intermediate techniques'
+            },
+            'A': {
+                'title': 'ADVANCED MODE',
+                'subtitle': 'Test your advanced solving strategies'
+            },
+            'G': {
+                'title': 'GRANDMASTER MODE',
+                'subtitle': 'Ultimate challenges for Sudoku masters'
+            }
+        }
+
+        # Draw main title
+        title = mode_info[mode]['title']
+        subtitle = mode_info[mode]['subtitle']
+
+        # Draw title
+        # c.setFont("Times-Italic", 36)
+        c.setFont("Times-BoldItalic", 36)
+        c.drawCentredString(self.width/2, self.height/2 + 20, title)
+
+        # Draw subtitle
+        c.setFont("Helvetica", 18)
+        c.drawCentredString(self.width/2, self.height/2 - 30, subtitle)
+
+        c.showPage()
+
     def add_puzzle_page(self, c, svg_path, puzzle_number, puzzle_background=None):
         """Add a puzzle page with proper formatting and metadata."""
         if puzzle_background and os.path.exists(puzzle_background):
@@ -429,7 +469,7 @@ class SudokuBookCreator:
                 c.showPage()
 
     def create_book(self, puzzles_folder, backgrounds=None):
-        """Create the complete puzzle book with different backgrounds for different sections."""
+        """Create the complete puzzle book with transition pages for modes."""
         if backgrounds is None:
             backgrounds = {}
 
@@ -439,19 +479,40 @@ class SudokuBookCreator:
         self.create_cover_page(c, backgrounds.get('cover'))
         self.create_instructions_page(c, backgrounds.get('instructions'))
 
-        # Sort puzzle files numerically
+        # Sort puzzle files numerically and group by mode
         puzzle_files = [f for f in os.listdir(puzzles_folder)
                         if f.endswith('.svg') and not f.endswith('S.svg')]
         puzzle_files.sort(key=lambda x: int(re.search(r'(\d+)', x).group()))
 
-        # Add puzzle pages
+        # Track the current mode to know when to insert transition pages
+        current_mode = None
+
+        # Add puzzle pages with mode transitions
         for puzzle_file in puzzle_files:
             puzzle_path = os.path.join(puzzles_folder, puzzle_file)
             puzzle_number = int(re.search(r'(\d+)', puzzle_file).group())
+
+            # Extract mode from filename (E/M/A/G)
+            mode = puzzle_file[puzzle_file.find('.')+2]
+
+            # If mode changes or it's the first puzzle, add transition page
+            if mode != current_mode:
+                self.create_mode_transition_page(
+                    c, mode, backgrounds.get('puzzle'))
+                current_mode = mode
+
             self.add_puzzle_page(
                 c, puzzle_path, puzzle_number, backgrounds.get('puzzle'))
 
         # Add solutions section with its background
+        solutions_background = backgrounds.get('solutions')
+        if solutions_background and os.path.exists(solutions_background):
+            c.drawImage(solutions_background, 0, 0, self.width, self.height)
+
+        c.setFont("Helvetica-Bold", 36)
+        c.drawCentredString(self.width/2, self.height/2, "SOLUTIONS")
+        c.showPage()
+
         self.add_solutions_section(
             c, puzzles_folder, backgrounds.get('solutions'))
 
