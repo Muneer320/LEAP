@@ -35,29 +35,32 @@ class SudokuBookCreator:
         """Get placeholder information for the next puzzle."""
         # List and sort all relevant files in the directory
         puzzle_files = sorted(os.listdir(puzzles_folder))
-        
+
         # Build the current puzzle pattern to match the filename
         current_pattern = rf"^{current_puzzle_number}\.\s*([A-Z]\d+)\.svg$"
-        
+
         for index, filename in enumerate(puzzle_files):
             match = re.match(current_pattern, filename)
             if match:
                 # Extract the puzzle identifier (e.g., "E2")
                 current_identifier = match.group(1)
-                
+
                 # Determine the next puzzle identifier (increment the digit)
-                letter, digit = re.match(r"([A-Z])(\d+)", current_identifier).groups()
+                letter, digit = re.match(
+                    r"([A-Z])(\d+)", current_identifier).groups()
                 next_identifier = f"{letter}{int(digit) + 1}"
-                
+
                 # Construct the placeholder filename for the next puzzle
-                next_placeholder_file = f"{current_puzzle_number + 1}. {next_identifier}_placeholders.txt"
-                placeholder_path = os.path.join(puzzles_folder, next_placeholder_file)
-                
+                next_placeholder_file = f"{
+                    current_puzzle_number + 1}. {next_identifier}_placeholders.txt"
+                placeholder_path = os.path.join(
+                    puzzles_folder, next_placeholder_file)
+
                 if os.path.exists(placeholder_path):
                     # Read and format the placeholder file
                     with open(placeholder_path, 'r') as f:
                         return [self.format_placeholder(line) for line in f]
-        
+
         return []
 
     def create_cover_page(self, c, cover_background=None):
@@ -121,32 +124,42 @@ class SudokuBookCreator:
 
             # Center the drawing on the page
             x_pos = (self.width - drawing.width * scale) / 2
-            y_pos = (self.height - drawing.height * scale) / 2 + 120  # Moved up slightly
+            y_pos = (self.height - drawing.height * scale) / \
+                2 + 120  # Moved up slightly
 
             renderPDF.draw(drawing, c, x_pos, y_pos)
 
         # Add placeholder information for the next puzzle
         # Add placeholder information for the next puzzle
-        placeholders = self.get_next_puzzle_placeholders(puzzle_number, os.path.dirname(svg_path))
+        placeholders = self.get_next_puzzle_placeholders(
+            puzzle_number, os.path.dirname(svg_path))
         if placeholders:
             # Calculate the initial Y position based on the number of rows
-            table_height = len(placeholders) * 18 + 25  # Total height needed for table including header
-            y_start = min(self.height - self.margin - table_height, self.margin + 200)
+            # Total height needed for table including header
+            table_height = len(placeholders) * 18 + 25
+            y_start = min(self.height - self.margin -
+                          table_height, self.margin + 200)
 
             c.setFont("Helvetica-Bold", 18)
-            c.drawCentredString(self.width / 2, y_start + 50, "For Next Puzzle")
+            c.drawCentredString(self.width / 2, y_start +
+                                50, "For Next Puzzle")
 
             # Calculate table width and center it
-            column_widths = [50, 100, 100, 100]  # Widths for Row, Column, Value
+            # Widths for Row, Column, Value
+            column_widths = [50, 100, 100, 100]
             table_width = sum(column_widths)
             x_start = (self.width - table_width) / 2
 
             # Set column positions relative to the centered start
             x_positions = [
                 x_start + column_widths[0] / 2,  # Center of first column
-                x_start + column_widths[0] + column_widths[1] / 2,  # Center of second column
-                x_start + column_widths[0] + column_widths[1] + column_widths[2] / 2,  # Center of third column
-                x_start + column_widths[0] + column_widths[1] + column_widths[2] + column_widths[3] / 2,  # Center of fourth column
+                # Center of second column
+                x_start + column_widths[0] + column_widths[1] / 2,
+                x_start + column_widths[0] + column_widths[1] + \
+                column_widths[2] / 2,  # Center of third column
+                # Center of fourth column
+                x_start + column_widths[0] + column_widths[1] + \
+                column_widths[2] + column_widths[3] / 2,
             ]
 
             c.setFont("Helvetica-Bold", 12)
@@ -167,7 +180,6 @@ class SudokuBookCreator:
                 c.drawCentredString(x_positions[2], y_position, col)
                 c.drawCentredString(x_positions[3], y_position, "__")
 
-
         # Get puzzle identifier from filename (e.g., "E1" from "2. E1.svg")
         puzzle_id = re.search(r'[EMAG]\d+', os.path.basename(svg_path)).group()
 
@@ -178,7 +190,7 @@ class SudokuBookCreator:
         c.showPage()
 
     def add_solutions_section(self, c, puzzles_folder, solutions_background=None):
-        """Add the solutions section with proper formatting."""
+        """Add the solutions section with solutions arranged in a 3x3 grid, grouped by difficulty."""
         # Solutions cover page
         if solutions_background and os.path.exists(solutions_background):
             c.drawImage(solutions_background, 0, 0, self.width, self.height)
@@ -187,36 +199,100 @@ class SudokuBookCreator:
         c.drawCentredString(self.width/2, self.height/2, "SOLUTIONS")
         c.showPage()
 
-        # Add individual solution pages
+        # Get all puzzle files and sort them
         puzzle_files = [f for f in os.listdir(puzzles_folder)
                         if f.endswith('.svg') and not f.endswith('S.svg')]
         puzzle_files.sort(key=lambda x: int(re.search(r'(\d+)', x).group()))
 
+        # Group puzzles by difficulty
+        difficulty_groups = {
+            'E': {'files': [], 'name': 'Easy Mode'},
+            'M': {'files': [], 'name': 'Medium Mode'},
+            'A': {'files': [], 'name': 'Advanced Mode'},
+            'G': {'files': [], 'name': 'Grandmaster Mode'}
+        }
+
         for puzzle_file in puzzle_files:
-            if solutions_background and os.path.exists(solutions_background):
-                c.drawImage(solutions_background, 0,
-                            0, self.width, self.height)
+            # Get E/M/A/G from filename
+            difficulty = puzzle_file[puzzle_file.find('.')+2]
+            if difficulty in difficulty_groups:
+                difficulty_groups[difficulty]['files'].append(puzzle_file)
 
-            solution_file = puzzle_file.replace('.svg', 'S.svg')
-            solution_path = os.path.join(puzzles_folder, solution_file)
+        # Calculate grid layout parameters
+        solutions_per_page = 9
+        rows, cols = 3, 3
 
-            if os.path.exists(solution_path):
-                drawing = svg2rlg(solution_path)
-                if drawing:
-                    scale = min(
-                        self.puzzle_size / drawing.width,
-                        self.puzzle_size / drawing.height
-                    )
-                    drawing.scale(scale, scale)
-                    x_pos = (self.width - drawing.width * scale) / 2
-                    y_pos = (self.height - drawing.height * scale) / 2
-                    renderPDF.draw(drawing, c, x_pos, y_pos)
+        # Calculate individual solution size (reduced to fit 9 per page)
+        solution_width = (self.width - 2 * self.margin) / cols
+        solution_height = (self.height - 3 * self.margin) / \
+            rows  # Extra margin for title
+        solution_size = min(solution_width, solution_height) * \
+            0.8  # 80% of available space
 
-                # Add solution page number
-                puzzle_id = re.search(r'[EMAG]\d+', puzzle_file).group()
+        # Process solutions by difficulty
+        for difficulty, group in difficulty_groups.items():
+            puzzle_files = group['files']
+
+            # Skip if no puzzles for this difficulty
+            if not puzzle_files:
+                continue
+
+            # Process solutions in groups of 9
+            for i in range(0, len(puzzle_files), solutions_per_page):
+                if solutions_background and os.path.exists(solutions_background):
+                    c.drawImage(solutions_background, 0,
+                                0, self.width, self.height)
+
+                # Add difficulty mode title at the top
+                c.setFont("Helvetica-Bold", 24)
+                c.drawCentredString(
+                    self.width/2, self.height - self.margin, group['name'])
+
+                # Process each solution in the current group
+                for j, puzzle_file in enumerate(puzzle_files[i:i + solutions_per_page]):
+                    row = j // cols
+                    col = j % cols
+
+                    solution_file = puzzle_file.replace('.svg', 'S.svg')
+                    solution_path = os.path.join(puzzles_folder, solution_file)
+
+                    if os.path.exists(solution_path):
+                        drawing = svg2rlg(solution_path)
+                        if drawing:
+                            # Calculate position for this solution
+                            scale = min(
+                                solution_size / drawing.width,
+                                solution_size / drawing.height
+                            )
+                            drawing.scale(scale, scale)
+
+                            # Calculate centered position within grid cell
+                            cell_center_x = self.margin + col * solution_width + solution_width/2
+                            cell_center_y = self.height - \
+                                (2*self.margin + row *
+                                 solution_height + solution_height/2)
+
+                            x_pos = cell_center_x - (drawing.width * scale) / 2
+                            y_pos = cell_center_y - \
+                                (drawing.height * scale) / 2
+
+                            renderPDF.draw(drawing, c, x_pos, y_pos)
+
+                            # Add solution ID below each solution
+                            puzzle_id = re.search(
+                                r'[EMAG]\d+', puzzle_file).group()
+                            c.setFont("Helvetica", 10)
+                            c.drawCentredString(cell_center_x,
+                                                y_pos - 20,  # Position below the solution
+                                                f"Solution - {puzzle_id}")
+
+                # Add page number
                 c.setFont("Helvetica", 12)
+                page_num = (i // solutions_per_page) + 1
+                total_pages = (len(puzzle_files) +
+                               solutions_per_page - 1) // solutions_per_page
                 c.drawCentredString(self.width/2, self.margin,
-                                    f"Solution - {puzzle_id}")
+                                    f"{group['name']} - Page {page_num} of {total_pages}")
 
                 c.showPage()
 
