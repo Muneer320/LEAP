@@ -2,9 +2,29 @@
 
 Ever wished Sudoku puzzles were more... connected? ~~<sub>Me neighter</sub>~~ Well, **LEAP** is exactly that - a Sudoku book generator that creates puzzles that are linked together like a chain of mathematical DNA. 🧬
 
+## Table of Contents
+- [🎮 LEAP - Linked Enigmas And Puzzles](#-leap---linked-enigmas-and-puzzles)
+  - [Table of Contents](#table-of-contents)
+  - [🧩 What's This All About?](#-whats-this-all-about)
+    - [The Secret Sauce 🤫](#the-secret-sauce-)
+  - [🚀 Quick Start](#-quick-start)
+    - [Feeling Fancy? Try These Arguments:](#feeling-fancy-try-these-arguments)
+  - [📋 Requirements](#-requirements)
+  - [📦 Installation](#-installation)
+  - [🎨 Features](#-features)
+  - [⚙️ Customization](#️-customization)
+  - [📁 Project Structure](#-project-structure)
+  - [🎯 Pro Tips](#-pro-tips)
+  - [⚠️ Important Notes](#️-important-notes)
+  - [🤝 Contributing](#-contributing)
+  - [📜 License](#-license)
+  - [🙏 Acknowledgments](#-acknowledgments)
+
+
+
 ## 🧩 What's This All About?
 
-*LEAP* is the spiritual successor to [**BOOP (Book of Organized Puzzles)**](https://github.com/Muneer320/BOOP), trading word searches for Sudoku with a twist. While BOOP organized random words into themed word searches, LEAP creates Sudoku puzzles where each one holds the key to solving the next. It's like a puzzle inception! 🌀
+_LEAP_ is the spiritual successor to [**BOOP (Book of Organized Puzzles)**](https://github.com/Muneer320/BOOP), trading word searches for Sudoku with a twist. While BOOP organized random words into themed word searches, LEAP creates Sudoku puzzles where each one holds the key to solving the next. It's like a puzzle inception! 🌀
 
 ### The Secret Sauce 🤫
 
@@ -42,6 +62,11 @@ python main.py \
 ## 📦 Installation
 
 1. Clone this repo
+
+```bash
+git clone https://github.com/Muneer320/LEAP.git
+```
+
 2. Install requirements:
 
 ```bash
@@ -69,22 +94,49 @@ python main.py
 
 Adjust these arguments to make your perfect puzzle book:
 
-| Argument          |      Description      | Default |
-| :---------------- | :-------------------: | :-----: |
-| -n, --name        |       Book name       | "LEAP"  |
-| -e, --easy        |     Easy puzzles      |   15    |
-| -m, --medium      |    Medium puzzles     |   10    |
-| -a, --advanced    |   Advanced puzzles    |    5    |
-| -g, --grandmaster |  Grandmaster puzzles  |    3    |
-| -eh, --easy_hints |    Easy mode hints    |   40    |
-| -ct, --cover-text |    Add cover text     |  False  |
-| -d, --delete      | Delete puzzles folder |  Fasle  |
+| Argument                     |        Description        | Default |
+| :--------------------------- | :-----------------------: | :-----: |
+| `-n`, `--name`               |    Output PDF filename    | "LEAP"  |
+| `-e`, `--easy`               |       Easy puzzles        |   15    |
+| `-m`, `--medium`             |      Medium puzzles       |   10    |
+| `-a`, `--advanced`           |     Advanced puzzles      |    5    |
+| `-g`, `--grandmaster`        |    Grandmaster puzzles    |    3    |
+| `-eh`, `--easy-hints`        |    Easy puzzles hints     |   40    |
+| `-mh`, `--medium-hints`      |   Medium puzzles hints    |   36    |
+| `-ah`, `--advanced-hints`    |  Advanced puzzles hints   |   27    |
+| `-gh`, `--grandmaster-hints` | Grandmaster puzzles hints |   18    |
+| `-ct`, `--cover-text`        |  Enable cover page text   |  False  |
+| `-d`, `--delete`             |   Delete puzzle folder    |  False  |
+
+## 📁 Project Structure
+
+```
+.
+│   createBook.py      # PDF book creation logic
+│   generatePuzzle.py  # Sudoku puzzle generation
+│   main.py            # Main execution script
+│   requirements.txt   # Project dependencies
+│
+└───Assets             # Background images and assets
+        Cover.png
+        Index.png
+        Instructions.png
+        PageBackground.jpg
+        Transition.png
+```
 
 ## 🎯 Pro Tips
 
 1. Start with easy mode (trust me)
 2. Each puzzle takes ~30 seconds to solve (or hours if you're like me)
 3. Solutions are at the back (no judging ~~<sup>cheater</sup>~~)
+
+## ⚠️ Important Notes
+
+- Each difficulty mode requires at least one puzzle
+- Minimum hint count per puzzle is 18 for puzzle validity
+- Background images should be placed in the `Assets` directory
+- Generated puzzles are temporarily stored and can be automatically cleaned up using the `-d` flag
 
 ## 🤝 Contributing
 
