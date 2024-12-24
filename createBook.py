@@ -8,7 +8,8 @@ import re
 
 
 class SudokuBookCreator:
-    def __init__(self, output_filename="Sudoku_Book.pdf", include_cover_text=False, background_images=None):
+    def __init__(self, output_filename="Sudoku_Book.pdf", include_cover_text=False,
+                 background_images=None, links_by_number=None):
         self.output_filename = output_filename
         self.page_width, self.page_height = A4
         self.page_margin = 50
@@ -16,27 +17,20 @@ class SudokuBookCreator:
                             (self.page_height - 4 * self.page_margin)) * 0.6
         self.include_cover_text = include_cover_text
         self.background_images = background_images if background_images else {}
+        self.links_by_number = links_by_number
 
     def parse_placeholder_format(self, line):
         match = re.match(r'([a-z])\s*=\s*R(\d+)C(\d+)\s*(?:\[=[0-9]\])?', line.strip())
         return (match.groups() if match else line.strip())
 
     def fetch_next_puzzle_placeholders(self, current_number, puzzle_dir):
-        puzzle_files = sorted(os.listdir(puzzle_dir))
-        current_pattern = rf"^{current_number}\.\s*([A-Z]\d+)\.svg$"
-
-        for index, filename in enumerate(puzzle_files):
-            match = re.match(current_pattern, filename)
-            if match:
-                current_id = match.group(1)
-                letter, digit = re.match(r"([A-Z])(\d+)", current_id).groups()
-                next_id = f"{letter}{int(digit) + 1}"
-                next_placeholder_file = f"{current_number + 1}. {next_id}_placeholders.txt"
-                placeholder_path = os.path.join(puzzle_dir, next_placeholder_file)
-
-                if os.path.exists(placeholder_path):
-                    with open(placeholder_path, 'r') as f:
-                        return [self.parse_placeholder_format(line) for line in f]
+        if self.links_by_number is not None:
+            return self.links_by_number.get(current_number + 1, [])
+        next_pattern = rf"^{current_number + 1}\. [EMAG]\d+_placeholders\.txt$"
+        for filename in os.listdir(puzzle_dir):
+            if re.match(next_pattern, filename):
+                with open(os.path.join(puzzle_dir, filename), 'r', encoding='utf-8') as handle:
+                    return [self.parse_placeholder_format(line) for line in handle]
         return []
 
     def _render_index_content(self, canvas_obj, mode_data):
@@ -305,7 +299,7 @@ class SudokuBookCreator:
             {"title": "Step 1: Solve the First Puzzle", "y_offset": -30,
             "font": ("Helvetica-Bold", 14),
             "text": (
-            "Start with Puzzle E1 - a standard Sudoku puzzle with no special rules. "
+            "Start with the first puzzle - a standard Sudoku puzzle with no special rules. "
             "Solve it completely using regular Sudoku rules.")},
             {"title": "Step 2: Use the Link Table", "y_offset": -15,
             "font": ("Helvetica-Bold", 14),
@@ -501,8 +495,10 @@ class SudokuBookCreator:
 
 
 def create_sudoku_book(puzzle_dir, output_filename="Sudoku_Book.pdf", 
-                      background_images=None, include_cover_text=False):
+                      background_images=None, include_cover_text=False,
+                      links_by_number=None):
     output_filename = output_filename.strip() if output_filename.endswith(".pdf") \
                      else f"{output_filename.strip()}.pdf"
-    creator = SudokuBookCreator(output_filename, include_cover_text, background_images)
+    creator = SudokuBookCreator(output_filename, include_cover_text,
+                                background_images, links_by_number)
     creator.create_book(puzzle_dir)

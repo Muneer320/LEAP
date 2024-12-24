@@ -3,6 +3,5 @@
 *.pdf
 *.cpython
 *.pyc
-test*
 _*
 puzzles*
