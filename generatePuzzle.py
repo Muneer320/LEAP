@@ -128,7 +128,7 @@ class EnhancedSudokuGenerator(SudokuGenerator):
 
         with open(self.coordinates_file, 'w') as f:
             for num, coords in coordinates_dict.items():
-                random.shuffle(coords)  # Randomize the order
+                random.shuffle(coords)
                 f.write(f"{num}: {', '.join(coords)}\n")
 
     def generate_linked_puzzle(self):
@@ -136,7 +136,6 @@ class EnhancedSudokuGenerator(SudokuGenerator):
         self.fill_grid()
         solution_grid = [row[:] for row in self.grid]
 
-        # Save solution with numbered prefix
         solution_filename = f"{
             self.puzzle_folder}/{self.global_number}. {self.difficulty}{self.puzzle_number}S"
         createPuzzleSvg(solution_filename, solution_grid)
@@ -152,18 +151,15 @@ class EnhancedSudokuGenerator(SudokuGenerator):
             if os.path.exists(prev_coord_file):
                 placeholders = {}
                 available_numbers = []
-                used_values = set()  # Track used values to ensure uniqueness
+                used_values = set()
 
-                # Get available numbers from the puzzle
                 for i in range(9):
                     for j in range(9):
                         if puzzle_grid[i][j] != 0:
                             available_numbers.append((puzzle_grid[i][j], i, j))
 
-                # Shuffle available numbers
                 random.shuffle(available_numbers)
 
-                # Read from previous puzzle's coordinates
                 coord_mapping = {}
                 with open(prev_coord_file, 'r') as f:
                     for line in f:
@@ -171,7 +167,6 @@ class EnhancedSudokuGenerator(SudokuGenerator):
                             num, coords = line.strip().split(': ')
                             coord_mapping[int(num)] = coords.split(', ')
 
-                # Create placeholders ensuring unique values
                 placeholder_idx = 0
                 for num, i, j in available_numbers:
                     if placeholder_idx >= self.n_placeholders:
@@ -183,7 +178,6 @@ class EnhancedSudokuGenerator(SudokuGenerator):
                         placeholders[placeholder] = f"{coord} [={num}]"
                         used_values.add(num)
 
-                        # Replace all occurrences of this number
                         for x in range(9):
                             for y in range(9):
                                 if puzzle_grid[x][y] == num:
@@ -191,12 +185,10 @@ class EnhancedSudokuGenerator(SudokuGenerator):
 
                         placeholder_idx += 1
 
-                # Save placeholder information
                 with open(f"{self.puzzle_folder}/{self.global_number}. {self.difficulty}{self.puzzle_number}_placeholders.txt", 'w') as f:
                     for placeholder, coord in placeholders.items():
                         f.write(f"{placeholder} = {coord}\n")
 
-        # Save puzzle with numbered prefix
         puzzle_filename = f"{
             self.puzzle_folder}/{self.global_number}. {self.difficulty}{self.puzzle_number}"
         createPuzzleSvg(puzzle_filename, puzzle_grid)
@@ -234,7 +226,6 @@ def createPuzzleSvg(filename="Puzzle", grid=[]):
     dwg = Drawing(filename, size=(grid_width, grid_height))
     grid_group = Group()
 
-    # Draw cells and text
     for row in range(grid_size):
         for col in range(grid_size):
             cell_x = col * cell_size
@@ -249,7 +240,6 @@ def createPuzzleSvg(filename="Puzzle", grid=[]):
             grid_group.add(dwg.rect(insert=(cell_x, cell_y), size=(
                 cell_size, cell_size), fill='none', stroke='black', stroke_width=1))
 
-    # Add thicker lines for 3x3 subgrids
     for i in range(1, grid_size):
         if i % 3 == 0:
             # Horizontal line
